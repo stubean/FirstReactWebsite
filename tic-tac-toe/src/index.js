@@ -50,10 +50,15 @@ function Square(props){
         super(props);
         this.state = {
             history: [
-                {squares:Array(9).fill(null)}
+                {
+                    squares:Array(9).fill(null),
+                    squareNumber:null,//the square's assigned value number. Easy to figure out row and column this way based on the board size.
+                }
             ],
             stepNumber:0,
             xIsNext:true,
+            numberOfRows: 3,
+            numberOfCols:3
         }
 
     }
@@ -69,7 +74,8 @@ function Square(props){
         squares[i] = this.state.xIsNext ? 'X':'O';
         this.setState({
             history:history.concat([{
-                squares:squares
+                squares:squares,
+                squareNumber:i
             }]),
             stepNumber: history.length,
             xIsNext: !this.state.xIsNext,
@@ -83,14 +89,31 @@ function Square(props){
         });
     }
 
+    resetGame(){
+        this.setState({
+            stepNumber:0,
+            history: [{
+                    squares:Array(9).fill(null),
+                    squareNumber:null,
+                }],
+            xIsNext:true,
+        });
+    }
+
     render() {
         const history = this.state.history;
         const current = history[this.state.stepNumber];
         const winner = calculateWinner(current.squares);
 
         const moves = history.map((step,move)=>{
+
+            //Get the row and column, starts top left at 0,0. Add 1 for user's help
+            const row = Math.floor(step.squareNumber/this.state.numberOfRows)+1;//the whole number represents the row
+            const col = step.squareNumber % this.state.numberOfCols+1;//the remainder represents which column
+
+
             const desc = move?
-            'Go to move #' + move :
+            'Go to move #' + move + ' ('+col+','+row+')':
             'Go to game start';
 
             return (
@@ -113,6 +136,7 @@ function Square(props){
       return (
         <div className="game">
           <div className="game-board">
+          <button onClick={() =>this.resetGame()}>Reset Game</button>
             <Board 
                 squares={current.squares}
                 onClick={(i) => this.handleClick(i)}
@@ -126,6 +150,8 @@ function Square(props){
       );
     }
   }
+
+  
 
   function calculateWinner(squares){
       const lines = [
