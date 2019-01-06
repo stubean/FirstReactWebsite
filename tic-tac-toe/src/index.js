@@ -9,6 +9,8 @@ function Square(props){
         </button>
     );
 };
+
+
   
   class Board extends React.Component {
 
@@ -19,6 +21,10 @@ function Square(props){
         onClick={()=> this.props.onClick(i)}
         />
       );
+    }
+
+    renderBoardRow(){
+
     }
   
     render() {     
@@ -110,7 +116,12 @@ function Square(props){
             //Get the row and column, starts top left at 0,0. Add 1 for user's help
             const row = Math.floor(step.squareNumber/this.state.numberOfRows)+1;//the whole number represents the row
             const col = step.squareNumber % this.state.numberOfCols+1;//the remainder represents which column
+            let classes ='';
 
+            //Add a CurrentMove class if the history button is the latest one
+            if(move == this.state.stepNumber){
+                classes = 'CurrentMove';
+            }
 
             const desc = move?
             'Go to move #' + move + ' ('+col+','+row+')':
@@ -118,7 +129,7 @@ function Square(props){
 
             return (
                 <li key={move}>
-                    <button onClick={()=>this.jumpTo(move)}>{desc}</button>
+                    <button className={classes} onClick={()=>this.jumpTo(move)}>{desc}</button>
                 </li>
             )
 
@@ -132,8 +143,10 @@ function Square(props){
           status = 'Next player: '+(this.state.xIsNext ? 'X': 'O');
         }
 
+        let test = <button>POOP</button>
 
       return (
+        
         <div className="game">
           <div className="game-board">
           <button onClick={() =>this.resetGame()}>Reset Game</button>
