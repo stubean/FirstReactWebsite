@@ -23,14 +23,47 @@ function Square(props){
       );
     }
 
-    renderBoardRow(){
-
-    }
+    renderRow(row){
+        return(
+            <div className="board-row">
+                {row.map((x) =>{
+                        return this.renderSquare(x);
+                })}
+            </div>
+        );
+    };
   
     render() {     
+
+        //create the board with for loops dynamically
+        var tempBoard = [];
+        /* [{
+            rowNumber:null,
+            columns:[]
+        }]*/
+        for(var y =0; y<3;y++){
+            tempBoard.push({
+                row:y,
+                columns:Array(3).fill(null)
+            })
+            for(var x=0; x<3;x++){
+                tempBoard[y].columns[x] = (y*3)+x;
+            }
+        }
+
       return (
         <div>
-          <div className="board-row">
+            {tempBoard.map((y) =>{//Map each row, passing in the columns to be rendered
+                return (
+                   this.renderRow(y.columns)
+                )
+            })}
+        </div>
+      );
+    }
+  }
+    //The outcome of the render board
+        /* <div className="board-row">
             {this.renderSquare(0)}
             {this.renderSquare(1)}
             {this.renderSquare(2)}
@@ -44,11 +77,7 @@ function Square(props){
             {this.renderSquare(6)}
             {this.renderSquare(7)}
             {this.renderSquare(8)}
-          </div>
-        </div>
-      );
-    }
-  }
+          </div> */
   
   class Game extends React.Component {
 
