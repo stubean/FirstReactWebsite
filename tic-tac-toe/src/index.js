@@ -25,8 +25,8 @@ function Square(props){
 
     renderRow(row){
         return(
-            <div className="board-row">
-                {row.map((x) =>{
+            <div key={row.row} className="board-row">
+                {row.columns.map((x) =>{
                         return this.renderSquare(x);
                 })}
             </div>
@@ -36,6 +36,8 @@ function Square(props){
     render() {     
 
         //create the board with for loops dynamically
+        //TO DO: REDO SO NOT USING FOR LOOPS WITH MAP. SHOULD ONLY NEED 1 MAP OR NONE MAYBE
+        //USE: let test = <button>test</button>
         var tempBoard = [];
         /* [{
             rowNumber:null,
@@ -55,7 +57,7 @@ function Square(props){
         <div>
             {tempBoard.map((y) =>{//Map each row, passing in the columns to be rendered
                 return (
-                   this.renderRow(y.columns)
+                   this.renderRow(y)
                 )
             })}
         </div>
@@ -90,10 +92,12 @@ function Square(props){
                     squareNumber:null,//the square's assigned value number. Easy to figure out row and column this way based on the board size.
                 }
             ],
+            orderHistoryDesc:true,
             stepNumber:0,
             xIsNext:true,
             numberOfRows: 3,
-            numberOfCols:3
+            numberOfCols:3,
+            
         }
 
     }
@@ -107,11 +111,26 @@ function Square(props){
             return;
         }
         squares[i] = this.state.xIsNext ? 'X':'O';
-        this.setState({
-            history:history.concat([{
+
+        //depending on how we order things, either add tot he front of the array or the end
+        let newHistory;
+        if(this.state.orderHistoryDesc)//add to end
+        {
+            newHistory= history.concat([{
                 squares:squares,
                 squareNumber:i
-            }]),
+            }])
+        }
+        else{//add to front
+          
+            newHistory = [{
+                squares:squares,
+                squareNumber:i
+            }].concat(history);
+        }
+
+        this.setState({
+            history:newHistory,
             stepNumber: history.length,
             xIsNext: !this.state.xIsNext,
         });
@@ -135,10 +154,17 @@ function Square(props){
         });
     }
 
+    reorderList(){
+        this.setState({
+           history: this.state.history.reverse(),
+           orderHistoryDesc:!this.state.orderHistoryDesc,
+        });
+    }
+
     render() {
         const history = this.state.history;
         const current = history[this.state.stepNumber];
-        const winner = calculateWinner(current.squares);
+        const winner = calculateWinner(current.squares);//returns winner symbol
 
         const moves = history.map((step,move)=>{
 
@@ -146,15 +172,18 @@ function Square(props){
             const row = Math.floor(step.squareNumber/this.state.numberOfRows)+1;//the whole number represents the row
             const col = step.squareNumber % this.state.numberOfCols+1;//the remainder represents which column
             let classes ='';
+            let WinnerText = '';
 
             //Add a CurrentMove class if the history button is the latest one
             if(move == this.state.stepNumber){
                 classes = 'CurrentMove';
+                if(winner)
+                    WinnerText = winner+' Wins | ';
             }
 
             const desc = move?
-            'Go to move #' + move + ' ('+col+','+row+')':
-            'Go to game start';
+            WinnerText+'Go to move #' + move + ' ('+col+','+row+')'
+                :'Go to game start';
 
             return (
                 <li key={move}>
@@ -172,7 +201,6 @@ function Square(props){
           status = 'Next player: '+(this.state.xIsNext ? 'X': 'O');
         }
 
-        let test = <button>POOP</button>
 
       return (
         
@@ -186,6 +214,7 @@ function Square(props){
           </div>
           <div className="game-info">
             <div>{status}</div>
+            <button onClick={()=> this.reorderList()}>Reorder</button>
             <ol>{moves}</ol>
           </div>
         </div>
