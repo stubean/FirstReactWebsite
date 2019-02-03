@@ -172,6 +172,9 @@ function Square(props){
             status = 'Winner: '+winner.winnerSymbol;
             current.squares.winningSquares = winner.winnerLine;//pass the squares that won
         }
+        else if(history.length == 10){//if there have been 9 moves, and no winner. Cat's game
+            status = "Cat's game! No winners";
+        }
         else{
           status = 'Next player: '+(this.state.xIsNext ? 'X': 'O');
         }
