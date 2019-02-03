@@ -31,6 +31,14 @@ body {
     text-align: center;
     width: 34px;
   }
+  .square.winSquareX{
+    color:#ff0000;
+    background-color: #ff000026;
+  }
+  .square.winSquareO{
+    color:green;
+    background-color: #00800026;
+  }
   
   .square:focus {
     outline: none;

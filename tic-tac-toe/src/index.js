@@ -3,8 +3,12 @@ import ReactDOM from 'react-dom';
 import './index.css';
 
 function Square(props){
+
+    let squareClasses = "square " 
+                + (props.isWinSquare ? "winSquare"+props.value : "");
+
     return(
-        <button className="square" onClick={props.onClick}>
+        <button className={squareClasses} onClick={props.onClick}>
             {props.value}
         </button>
     );
@@ -14,72 +18,62 @@ function Square(props){
   
   class Board extends React.Component {
 
-    renderSquare(i) {
+    renderSquare(squareNumber, isWinSquare) {
       return (
       <Square 
-        value={this.props.squares[i]}
-        onClick={()=> this.props.onClick(i)}
+        value={this.props.squares[squareNumber]}
+        onClick={()=> this.props.onClick(squareNumber)}
+        isWinSquare = {isWinSquare}
         />
       );
     }
-
-    renderRow(row){
-        return(
-            <div key={row.row} className="board-row">
-                {row.columns.map((x) =>{
-                        return this.renderSquare(x);
-                })}
-            </div>
-        );
-    };
   
     render() {     
 
-        //create the board with for loops dynamically
-        //TO DO: REDO SO NOT USING FOR LOOPS WITH MAP. SHOULD ONLY NEED 1 MAP OR NONE MAYBE
-        //USE: let test = <button>test</button>
-        var tempBoard = [];
-        /* [{
-            rowNumber:null,
-            columns:[]
-        }]*/
-        for(var y =0; y<3;y++){
-            tempBoard.push({
-                row:y,
-                columns:Array(3).fill(null)
-            })
-            for(var x=0; x<3;x++){
-                tempBoard[y].columns[x] = (y*3)+x;
+        let squares = [];
+        let row = [];
+        let currentSquareNumber = 0;
+        let isWinSquare = false;
+
+        for(let y=1;y<=3;y++){//rows
+            row = [];
+            for(let x = 1; x<=3;x++){//columns
+
+                if(this.props.squares.winningSquares)
+                    isWinSquare = (this.props.squares.winningSquares.includes(currentSquareNumber)?true:false);
+
+                row.push(this.renderSquare(currentSquareNumber, isWinSquare));
+                currentSquareNumber++;
+
             }
+            squares.push(<div key={currentSquareNumber} className="board-row">{row}</div>);
         }
+
 
       return (
         <div>
-            {tempBoard.map((y) =>{//Map each row, passing in the columns to be rendered
-                return (
-                   this.renderRow(y)
-                )
-            })}
+            {squares}
         </div>
       );
     }
-  }
-    //The outcome of the render board
-        /* <div className="board-row">
+    /*
+     <div className="board-row" key="0">
             {this.renderSquare(0)}
             {this.renderSquare(1)}
             {this.renderSquare(2)}
           </div>
-          <div className="board-row">
+          <div className="board-row" key="1">
             {this.renderSquare(3)}
             {this.renderSquare(4)}
             {this.renderSquare(5)}
           </div>
-          <div className="board-row">
+          <div className="board-row" key="2">
             {this.renderSquare(6)}
             {this.renderSquare(7)}
             {this.renderSquare(8)}
-          </div> */
+          </div>
+    */
+  }
   
   class Game extends React.Component {
 
@@ -92,12 +86,11 @@ function Square(props){
                     squareNumber:null,//the square's assigned value number. Easy to figure out row and column this way based on the board size.
                 }
             ],
-            orderHistoryDesc:true,
             stepNumber:0,
             xIsNext:true,
+            sortAscending:true,
             numberOfRows: 3,
-            numberOfCols:3,
-            
+            numberOfCols:3
         }
 
     }
@@ -111,26 +104,11 @@ function Square(props){
             return;
         }
         squares[i] = this.state.xIsNext ? 'X':'O';
-
-        //depending on how we order things, either add tot he front of the array or the end
-        let newHistory;
-        if(this.state.orderHistoryDesc)//add to end
-        {
-            newHistory= history.concat([{
-                squares:squares,
-                squareNumber:i
-            }])
-        }
-        else{//add to front
-          
-            newHistory = [{
-                squares:squares,
-                squareNumber:i
-            }].concat(history);
-        }
-
         this.setState({
-            history:newHistory,
+            history:history.concat([{
+                squares:squares,
+                squareNumber:i
+            }]),
             stepNumber: history.length,
             xIsNext: !this.state.xIsNext,
         });
@@ -154,36 +132,32 @@ function Square(props){
         });
     }
 
-    reorderList(){
+    toggleSortOrder(){
         this.setState({
-           history: this.state.history.reverse(),
-           orderHistoryDesc:!this.state.orderHistoryDesc,
-        });
+            sortAscending: !this.state.sortAscending
+        })
     }
 
     render() {
         const history = this.state.history;
         const current = history[this.state.stepNumber];
-        const winner = calculateWinner(current.squares);//returns winner symbol
-
+        const winner = calculateWinner(current.squares);
+        let nextSortOrder = "";
         const moves = history.map((step,move)=>{
 
             //Get the row and column, starts top left at 0,0. Add 1 for user's help
             const row = Math.floor(step.squareNumber/this.state.numberOfRows)+1;//the whole number represents the row
             const col = step.squareNumber % this.state.numberOfCols+1;//the remainder represents which column
             let classes ='';
-            let WinnerText = '';
 
             //Add a CurrentMove class if the history button is the latest one
             if(move == this.state.stepNumber){
                 classes = 'CurrentMove';
-                if(winner)
-                    WinnerText = winner+' Wins | ';
             }
 
             const desc = move?
-            WinnerText+'Go to move #' + move + ' ('+col+','+row+')'
-                :'Go to game start';
+            'Go to move #' + move + ' ('+col+','+row+')':
+            'Go to game start';
 
             return (
                 <li key={move}>
@@ -195,12 +169,22 @@ function Square(props){
 
         let status;
         if(winner){
-            status = 'Winner: '+winner;
+            status = 'Winner: '+winner.winnerSymbol;
+            current.squares.winningSquares = winner.winnerLine;//pass the squares that won
         }
         else{
           status = 'Next player: '+(this.state.xIsNext ? 'X': 'O');
         }
 
+        if(!this.state.sortAscending){//if we are not in ascending order, need to flip the order
+            moves.sort(function(a,b){
+                return b.key - a.key;
+            })
+            nextSortOrder = "Ascending "
+        }
+        else{
+            nextSortOrder = "Descending"
+        }
 
       return (
         
@@ -214,7 +198,7 @@ function Square(props){
           </div>
           <div className="game-info">
             <div>{status}</div>
-            <button onClick={()=> this.reorderList()}>Reorder</button>
+            <button onClick={() =>this.toggleSortOrder()}>Sort {nextSortOrder}</button>
             <ol>{moves}</ol>
           </div>
         </div>
@@ -239,7 +223,8 @@ function Square(props){
       for(let i = 0; i <lines.length; i++){
           const [a,b,c] = lines[i];
           if(squares[a] && squares[a] === squares[b] && squares[a] === squares[c])
-            return squares[a];
+            return ({winnerSymbol: squares[a], 
+                    winnerLine: lines[i]});//return the 3 winner #'s and the line it was on
       }
       return null;
   }
